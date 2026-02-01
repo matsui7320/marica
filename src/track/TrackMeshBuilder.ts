@@ -94,6 +94,63 @@ export class TrackMeshBuilder {
 
     return { road, offroad };
   }
+
+  /** Create a checkered start/finish line at t=0 */
+  static buildStartLine(spline: TrackSpline): THREE.Mesh {
+    const sp = spline.getPointAt(0);
+    const hw = sp.width * 0.5;
+
+    // Checkered texture
+    const size = 128;
+    const cells = 8;
+    const cellSize = size / cells;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    for (let y = 0; y < cells; y++) {
+      for (let x = 0; x < cells; x++) {
+        ctx.fillStyle = (x + y) % 2 === 0 ? '#ffffff' : '#222222';
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+      }
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+
+    const bandWidth = hw * 2;
+    const bandDepth = 2.5;
+
+    const geo = new THREE.PlaneGeometry(bandWidth, bandDepth);
+    const mat = new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.6,
+      metalness: 0.0,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+
+    // Position at t=0, slightly above road surface
+    mesh.position.copy(sp.position);
+    mesh.position.addScaledVector(sp.normal, 0.02);
+
+    // Orient: normal of plane = track surface normal, align width along binormal
+    const m = new THREE.Matrix4();
+    const tangent = sp.tangent.clone().normalize();
+    const binormal = sp.binormal.clone().normalize();
+    const normal = sp.normal.clone().normalize();
+    // PlaneGeometry lies in XY by default, face along +Z
+    // We want: plane X → binormal, plane Y → tangent, plane face → normal
+    m.makeBasis(binormal, tangent, normal);
+    mesh.rotation.setFromRotationMatrix(m);
+
+    mesh.receiveShadow = true;
+
+    return mesh;
+  }
 }
 
 function buildMesh(

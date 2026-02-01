@@ -162,6 +162,7 @@ export class RaceManager {
     const { road, offroad } = TrackMeshBuilder.build(this.trackSpline, trackConfig.environment);
     this.sceneManager.add(road);
     this.sceneManager.add(offroad);
+    this.sceneManager.add(TrackMeshBuilder.buildStartLine(this.trackSpline));
 
     // Environment
     this.trackEnv.build(this.trackSpline, trackConfig.environment);
