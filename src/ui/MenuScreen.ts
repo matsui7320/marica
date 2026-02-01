@@ -67,7 +67,7 @@ export class MenuScreen {
 
     if (this.phase === 'mode') {
       content.innerHTML = `
-        <div class="menu-title">RAVI</div>
+        <div class="menu-title">まりか</div>
         <div class="menu-tagline">ARCADE RACING</div>
         <div class="menu-buttons">
           <button class="menu-button" data-mode="grandprix">GRAND PRIX</button>
@@ -91,7 +91,7 @@ export class MenuScreen {
     } else {
       const title = document.createElement('div');
       title.className = 'menu-title';
-      title.textContent = 'RAVI';
+      title.textContent = 'まりか';
       title.style.fontSize = '52px';
       title.style.marginBottom = '8px';
       content.appendChild(title);
