@@ -1,6 +1,6 @@
 import { Engine } from './core/Engine';
 import { Clock } from './core/Clock';
-import { InputManager, P1_KEYS, P2_KEYS } from './core/InputManager';
+import { InputManager, P1_KEYS, P2_KEYS, showTouchControls } from './core/InputManager';
 import { AudioManager } from './core/AudioManager';
 import { CameraController } from './scene/CameraController';
 import { RaceManager } from './race/RaceManager';
@@ -119,6 +119,7 @@ export class Game {
     this.countdown.hide();
     this.engine.container.style.display = 'none';
     this.cleanupSplitScreen();
+    showTouchControls(false);
 
     if (this.audio.isReady) {
       this.audio.playBGM('/bgm/menu.mp3');
@@ -142,6 +143,7 @@ export class Game {
   private async startRace(menuResult: MenuResult): Promise<void> {
     this.gameState = 'racing';
     this.engine.container.style.display = '';
+    showTouchControls(true);
 
     this.isSplitScreen = menuResult.mode === '2player';
 
@@ -534,6 +536,7 @@ export class Game {
     this.hud.hide();
     this.hud2?.hide();
     this.countdown.hide();
+    showTouchControls(false);
 
     // Stop race BGM, play finish fanfare, then start results BGM
     this.audio.stopBGM(0.5);

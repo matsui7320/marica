@@ -61,6 +61,131 @@ function initSharedKeys(): void {
   });
 }
 
+// ── Touch controls (shared singleton) ──
+interface TouchState {
+  steer: number;       // -1..1
+  accelerate: number;  // 0..1
+  brake: number;       // 0..1
+  drift: boolean;
+  useItem: boolean;
+  pause: boolean;
+}
+
+let touchState: TouchState = {
+  steer: 0, accelerate: 0, brake: 0, drift: false, useItem: false, pause: false,
+};
+let touchOverlay: HTMLElement | null = null;
+let touchInitialized = false;
+
+function isTouchDevice(): boolean {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+function initTouchControls(): void {
+  if (touchInitialized) return;
+  touchInitialized = true;
+  if (!isTouchDevice()) return;
+
+  // Prevent pinch-zoom and pull-to-refresh
+  document.addEventListener('touchmove', (e) => { e.preventDefault(); }, { passive: false });
+
+  const overlay = document.createElement('div');
+  overlay.id = 'touch-controls';
+  overlay.innerHTML = `
+    <div class="touch-steer-zone" id="touch-steer-zone">
+      <div class="touch-steer-knob" id="touch-steer-knob"></div>
+    </div>
+    <div class="touch-buttons">
+      <button class="touch-btn touch-btn-accel" id="touch-accel">▲</button>
+      <button class="touch-btn touch-btn-brake" id="touch-brake">▼</button>
+      <button class="touch-btn touch-btn-drift" id="touch-drift">D</button>
+      <button class="touch-btn touch-btn-item" id="touch-item">★</button>
+      <button class="touch-btn touch-btn-pause" id="touch-pause">II</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  touchOverlay = overlay;
+
+  // ── Steering (left side) ──
+  const steerZone = document.getElementById('touch-steer-zone')!;
+  const knob = document.getElementById('touch-steer-knob')!;
+  let steerTouchId: number | null = null;
+  let steerCenterX = 0;
+
+  steerZone.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    steerTouchId = t.identifier;
+    steerCenterX = t.clientX;
+    knob.style.opacity = '1';
+    knob.style.transform = 'translate(-50%, -50%)';
+  }, { passive: false });
+
+  const handleSteerMove = (e: TouchEvent) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === steerTouchId) {
+        const dx = t.clientX - steerCenterX;
+        const maxDist = 60;
+        const clamped = Math.max(-maxDist, Math.min(maxDist, dx));
+        touchState.steer = clamped / maxDist;
+        knob.style.transform = `translate(calc(-50% + ${clamped}px), -50%)`;
+      }
+    }
+  };
+
+  steerZone.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    handleSteerMove(e);
+  }, { passive: false });
+
+  const endSteer = (e: TouchEvent) => {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === steerTouchId) {
+        steerTouchId = null;
+        touchState.steer = 0;
+        knob.style.opacity = '0.5';
+        knob.style.transform = 'translate(-50%, -50%)';
+      }
+    }
+  };
+  steerZone.addEventListener('touchend', endSteer);
+  steerZone.addEventListener('touchcancel', endSteer);
+
+  // ── Buttons (right side) ──
+  const setupBtn = (id: string, onDown: () => void, onUp: () => void) => {
+    const btn = document.getElementById(id)!;
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(); }, { passive: false });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); onUp(); });
+    btn.addEventListener('touchcancel', (e) => { e.preventDefault(); onUp(); });
+  };
+
+  setupBtn('touch-accel',
+    () => { touchState.accelerate = 1; },
+    () => { touchState.accelerate = 0; },
+  );
+  setupBtn('touch-brake',
+    () => { touchState.brake = 1; },
+    () => { touchState.brake = 0; },
+  );
+  setupBtn('touch-drift',
+    () => { touchState.drift = true; },
+    () => { touchState.drift = false; },
+  );
+  setupBtn('touch-item',
+    () => { touchState.useItem = true; },
+    () => { touchState.useItem = false; },
+  );
+  setupBtn('touch-pause',
+    () => { touchState.pause = true; },
+    () => { touchState.pause = false; },
+  );
+}
+
+export function showTouchControls(visible: boolean): void {
+  if (touchOverlay) touchOverlay.style.display = visible ? '' : 'none';
+}
+
 export class InputManager {
   private keys: Set<string>;
   private gamepadIndex = -1;
@@ -75,6 +200,7 @@ export class InputManager {
 
   constructor(bindings?: KeyBindings) {
     initSharedKeys();
+    initTouchControls();
     this.keys = sharedKeys;
     this.bindings = bindings ?? null;
     this.useGamepad = !bindings; // Only use gamepad when no explicit bindings (legacy / P1 default)
@@ -93,11 +219,15 @@ export class InputManager {
     const kb = this.pollKeyboard();
     const gp = this.useGamepad ? this.pollGamepad() : null;
 
+    const tc = touchState;
+
     const state: InputState = {
-      accelerate: gp ? Math.max(kb.accelerate, gp.accelerate) : kb.accelerate,
-      brake: gp ? Math.max(kb.brake, gp.brake) : kb.brake,
-      steer: (gp && Math.abs(gp.steer) > 0.1) ? gp.steer : kb.steer,
-      drift: kb.drift || (gp?.drift ?? false),
+      accelerate: Math.max(kb.accelerate, gp?.accelerate ?? 0, tc.accelerate),
+      brake: Math.max(kb.brake, gp?.brake ?? 0, tc.brake),
+      steer: (Math.abs(tc.steer) > 0.1) ? tc.steer
+           : (gp && Math.abs(gp.steer) > 0.1) ? gp.steer
+           : kb.steer,
+      drift: kb.drift || (gp?.drift ?? false) || tc.drift,
       useItem: false,
       lookBack: kb.lookBack || (gp?.lookBack ?? false),
       pause: false,
@@ -105,8 +235,8 @@ export class InputManager {
     };
 
     // Edge detection for item/pause/confirm
-    const rawUseItem = kb.useItem || (gp?.useItem ?? false);
-    const rawPause = kb.pause || (gp?.pause ?? false);
+    const rawUseItem = kb.useItem || (gp?.useItem ?? false) || tc.useItem;
+    const rawPause = kb.pause || (gp?.pause ?? false) || tc.pause;
     const rawConfirm = kb.confirm || (gp?.confirm ?? false);
 
     state.useItem = rawUseItem && !this.prevUseItem;

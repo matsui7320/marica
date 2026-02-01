@@ -311,13 +311,12 @@ export function updateKartPhysics(
       state.position.y = groundY;
       if (state.verticalVelocity < 0) state.verticalVelocity = 0;
       state.isGrounded = true;
-      // On slopes, set vertical velocity to follow terrain upward
+      // On slopes, set vertical velocity to follow terrain surface
       const ny = surface.normal.y;
       if (ny < 0.98) {
         const nx = surface.normal.x, nz = surface.normal.z;
-        const riseOverRun = Math.sqrt(nx * nx + nz * nz) / Math.max(ny, 0.1);
         const climbRate = -(state.velocity.x * nx + state.velocity.z * nz) / Math.max(ny, 0.1);
-        state.verticalVelocity = Math.max(climbRate, 0);
+        state.verticalVelocity = climbRate;
       }
     } else if (state.position.y > groundY + 1.5) {
       state.isGrounded = false;

@@ -84,18 +84,14 @@ export class KartAI {
     const wrappedDelta = Math.min(progressDelta, 1 - progressDelta);
     this.lastProgressT = kart.state.lapProgress;
 
-    const lowSpeed = kart.state.speed < KART_MAX_SPEED * 0.05;
-    const noProgress = wrappedDelta < 0.0001;
-    // Also detect when kart has speed but makes no lap progress (e.g. stuck on slope)
-    const stalling = kart.state.speed > 0.5 && wrappedDelta < 0.0005;
-    if ((lowSpeed && noProgress) || stalling) {
+    if (kart.state.speed < KART_MAX_SPEED * 0.05 && wrappedDelta < 0.0001) {
       this.stuckTimer += dt;
     } else {
       this.stuckTimer = Math.max(0, this.stuckTimer - dt * 2);
     }
 
-    // If stuck for over 0.8s, enter recovery
-    if (this.stuckTimer > 0.8) {
+    // If stuck for over 1.2s, enter recovery
+    if (this.stuckTimer > 1.2) {
       this.stuckRecoveryTimer = 1.0;
       this.stuckTimer = 0;
     }

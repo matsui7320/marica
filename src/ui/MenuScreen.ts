@@ -79,7 +79,6 @@ export class MenuScreen {
           <b>P1</b> Arrows + <kbd>/</kbd> Drift + <kbd>\\</kbd> Item<br>
           <b>P2</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> + <kbd>2</kbd> Drift + <kbd>1</kbd> Item
         </div>
-        <button class="menu-sfx-preview">&#9654; FINISH SFX</button>
       `;
 
       content.querySelectorAll('.menu-button').forEach(btn => {
@@ -88,12 +87,6 @@ export class MenuScreen {
           this.phase = 'track';
           this.render();
         });
-      });
-
-      const sfxBtn = content.querySelector('.menu-sfx-preview') as HTMLButtonElement;
-      sfxBtn.addEventListener('click', () => {
-        this.audio.init();
-        this.audio.playFinish();
       });
     } else {
       const title = document.createElement('div');
