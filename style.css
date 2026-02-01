@@ -1445,3 +1445,34 @@ html, body {
 @media (hover: hover) and (pointer: fine) {
   #touch-controls { display: none !important; }
 }
+
+/* Mobile: shrink HUD elements to half size */
+@media (max-width: 768px) {
+  .hud-minimap {
+    transform: scale(0.8);
+    width: 85px;
+    height: 85px;
+  }
+  .hud-speed-container {
+    width: 180px;
+    height: 130px;
+    bottom: 5px;
+    right: 5px;
+  }
+  .hud-position {
+    transform: scale(0.75);
+    top: 12px;
+    left: 12px;
+  }
+  .hud-position.pos-change {
+    transform: scale(0.98);
+  }
+  .hud-lap-container {
+    transform: scale(0.75);
+    top: 12px;
+    right: 12px;
+  }
+  .hud-item-container {
+    transform: translateX(-50%) scale(0.8);
+  }
+}
