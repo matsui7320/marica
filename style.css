@@ -1475,4 +1475,91 @@ html, body {
   .hud-item-container {
     transform: translateX(-50%) scale(0.8);
   }
+
+  /* Menu */
+  .menu-title {
+    font-size: 48px;
+    letter-spacing: 8px;
+  }
+  .menu-tagline {
+    font-size: 14px;
+    letter-spacing: 6px;
+    margin-bottom: 24px;
+  }
+  .menu-buttons {
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .menu-button {
+    width: 240px;
+    padding: 14px 20px;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  .menu-subtitle {
+    font-size: 11px;
+  }
+
+  /* Course select */
+  .course-select-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .course-select {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .course-card {
+    width: 130px;
+  }
+  .course-card-preview {
+    height: 80px;
+  }
+  .course-card-info {
+    padding: 8px 6px;
+  }
+  .course-card h3 {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  .course-card p {
+    font-size: 10px;
+  }
+  .menu-back-btn {
+    padding: 8px 16px;
+    font-size: 11px;
+  }
+}
+
+/* Mobile landscape: shrink HUD when screen height is small */
+@media (max-height: 500px) {
+  .hud-minimap {
+    transform: scale(0.8);
+    width: 85px;
+    height: 85px;
+    bottom: 10px;
+    left: 10px;
+  }
+  .hud-speed-container {
+    width: 180px;
+    height: 130px;
+    bottom: 5px;
+    right: 5px;
+  }
+  .hud-position {
+    transform: scale(0.75);
+    top: 8px;
+    left: 8px;
+  }
+  .hud-position.pos-change {
+    transform: scale(0.98);
+  }
+  .hud-lap-container {
+    transform: scale(0.75);
+    top: 8px;
+    right: 8px;
+  }
+  .hud-item-container {
+    transform: translateX(-50%) scale(0.8);
+  }
 }
